@@ -419,10 +419,14 @@ static void cursor_handle_init(SpiceChannel *channel, SpiceMsgIn *in)
     cache_clear(c->cursors);
     cursor = set_cursor(channel, &init->cursor);
     c->init_done = TRUE;
-    if (cursor)
+    if (cursor){
+		g_warning("%s: emit_cursor_set() ", __FUNCTION__);
         emit_cursor_set(channel, cursor);
-    if (!init->visible || !cursor)
+    	}
+    if (!init->visible || !cursor){
+		g_warning("%s: set curors hide", __FUNCTION__);
         g_coroutine_signal_emit(channel, signals[SPICE_CURSOR_HIDE], 0);
+     }
     if (cursor)
         display_cursor_unref(cursor);
 }

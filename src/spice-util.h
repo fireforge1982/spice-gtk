@@ -20,6 +20,20 @@
 
 #include <glib-object.h>
 
+
+#include <android/log.h>
+
+
+
+
+#ifdef __ANDROID__
+
+
+#define  LOG_TAG    "spice-gtk"
+
+#endif
+
+
 G_BEGIN_DECLS
 
 void spice_util_set_debug(gboolean enabled);
@@ -35,12 +49,18 @@ gchar* spice_uuid_to_string(const guint8 uuid[16]);
 gchar* spice_dos2unix(const gchar *str, gssize len, GError **error);
 gchar* spice_unix2dos(const gchar *str, gssize len, GError **error);
 
+
+#ifndef __ANDROID__
+
 #define SPICE_DEBUG(fmt, ...)                                   \
     do {                                                        \
         if (G_UNLIKELY(spice_util_get_debug()))                 \
             g_debug(G_STRLOC " " fmt, ## __VA_ARGS__);          \
     } while (0)
+#else
+#define SPICE_DEBUG(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__) // android_log('W', __VA_ARGS__) //  
 
+#endif
 #define SPICE_RESERVED_PADDING (10 * sizeof(void*))
 
 /* need to be in a public header, glib-compat.h is private */

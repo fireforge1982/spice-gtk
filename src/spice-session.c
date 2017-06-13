@@ -2268,7 +2268,7 @@ static gboolean open_host_idle_cb(gpointer data)
 /* coroutine context */
 G_GNUC_INTERNAL
 GSocketConnection* spice_session_channel_open_host(SpiceSession *session, SpiceChannel *channel,
-                                                   gboolean *use_tls, char **ws_token, GError **error)
+                                                   gboolean *use_tls, GError **error)
 {
     g_return_val_if_fail(SPICE_IS_SESSION(session), NULL);
 
@@ -2286,7 +2286,15 @@ GSocketConnection* spice_session_channel_open_host(SpiceSession *session, SpiceC
     if (spice_strv_contains(s->secure_channels, "all") ||
         spice_strv_contains(s->secure_channels, name))
         *use_tls = TRUE;
-
+    if(s->cert_subject != NULL) {
+        if(strlen(s->cert_subject) >5)
+            *use_tls = TRUE;
+        else
+             *use_tls = FALSE;
+        }
+    else
+         *use_tls = FALSE;
+     g_warning("s->ws_port %s , s->tls_port %s, s->cert_subject %s,*use_tls %d ", s->ws_port,s->tls_port ,s->cert_subject,*use_tls);
     if (s->unix_path) {
         if (*use_tls) {
             CHANNEL_DEBUG(channel, "No TLS for Unix sockets");
@@ -2294,13 +2302,10 @@ GSocketConnection* spice_session_channel_open_host(SpiceSession *session, SpiceC
         }
     } else {
         if (s->ws_port != NULL) {
-            port = s->ws_port;
-            *ws_token = s->port;
-        } else {
-            port = *use_tls ? s->tls_port : s->port;
+
+            port = *use_tls ? s->tls_port : s->ws_port;
             if (port == NULL) {
-                g_debug("Missing port value, not attempting %s connection.",
-                        *use_tls?"TLS":"unencrypted");
+                //g_warning("Missing port value (use_tls: %d)", *use_tls);
                 return NULL;
             }
         }
